@@ -25,12 +25,6 @@ There is no build step and no account is needed.
 
 The page does not send text to a server. It has no backend, analytics, or live-secret verification. Text stays in the browser tab unless you copy or download it.
 
-## Limits
-
-This is a pattern checker, not proof that a value is a real credential. It can miss secrets and can flag harmless examples. It does not replace GitHub push protection, Gitleaks, TruffleHog, or a review by a security team.
-
-The first version checks text files. It does not inspect screenshots or scan Git history.
-
 ## Why it exists
 
 People often paste logs, tickets, and error messages into public issues or support chats. A quick local check can catch obvious secrets and personal paths before they are shared.
