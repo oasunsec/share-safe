@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ShareSafe</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #d9e0ea;
+      --panel: #ffffff;
+      --page: #f4f6f9;
+      --blue: #2457d6;
+      --blue-dark: #163da5;
+      --red: #b42318;
+      --red-bg: #fff1f0;
+      --amber: #9a6700;
+      --amber-bg: #fff8e6;
+      --green: #19704a;
+      --green-bg: #edf9f2;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font: 16px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .shell { max-width: 1120px; margin: 0 auto; padding: 42px 22px 56px; }
+
+    .hero {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 22px;
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .14em;
+    }
+
+    h1, h2, p { margin-top: 0; }
+    h1 { margin-bottom: 8px; font-size: clamp(2rem, 5vw, 3rem); letter-spacing: -.04em; }
+    h2 { margin-bottom: 0; font-size: 1.05rem; }
+    .intro { margin-bottom: 0; color: var(--muted); font-size: 1.05rem; }
+
+    .local-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid #c6ead6;
+      border-radius: 999px;
+      background: var(--green-bg);
+      color: var(--green);
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #2aa66f; }
+
+    .notice {
+      margin-bottom: 18px;
+      border: 1px solid #cbd8f7;
+      border-radius: 12px;
+      background: #eef3ff;
+      color: #203b78;
+      padding: 13px 15px;
+    }
+
+    .grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr); gap: 18px; }
+    .panel { border: 1px solid var(--line); border-radius: 14px; background: var(--panel); box-shadow: 0 8px 24px rgba(23, 32, 51, .04); }
+    .panel-inner { padding: 18px; }
+    .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 318px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fbfcfe;
+      color: var(--ink);
+      padding: 13px;
+      font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    textarea:focus, button:focus-visible, input:focus-visible { outline: 3px solid rgba(36, 87, 214, .22); outline-offset: 2px; }
+    #redactedText { min-height: 210px; background: #f7fbf8; }
+
+    .controls, .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-top: 12px; }
+    button, .file-control {
+      border: 1px solid #c5cfdd;
+      border-radius: 9px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+      font: inherit;
+      font-size: 14px;
+      padding: 8px 12px;
+    }
+
+    button:hover, .file-control:hover { border-color: #8d9bb0; background: #f9fafc; }
+    button:disabled { cursor: not-allowed; opacity: .5; }
+    .primary { border-color: var(--blue); background: var(--blue); color: #fff; font-weight: 700; }
+    .primary:hover { border-color: var(--blue-dark); background: var(--blue-dark); }
+    .file-control { display: inline-flex; align-items: center; gap: 7px; }
+    .file-control input { width: 1px; height: 1px; position: absolute; opacity: 0; }
+    .link-button { border: 0; background: transparent; color: var(--blue); padding: 2px 0; }
+    .link-button:hover { border: 0; background: transparent; color: var(--blue-dark); text-decoration: underline; }
+    .helper, .status { min-height: 1.4em; margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+
+    .summary-pill { border-radius: 999px; background: var(--amber-bg); color: var(--amber); padding: 4px 9px; font-size: 12px; font-weight: 700; }
+    .summary-pill.clear { background: var(--green-bg); color: var(--green); }
+    .stats { display: flex; gap: 28px; border-bottom: 1px solid var(--line); margin-bottom: 12px; padding-bottom: 14px; }
+    .stats > div { display: grid; gap: 2px; }
+    .stat-value { font-size: 1.7rem; font-weight: 800; line-height: 1; }
+    .stats span:last-child { color: var(--muted); font-size: 12px; }
+
+    .results { max-height: 420px; overflow: auto; }
+    .empty { margin: 0; color: var(--muted); }
+    .finding { border: 1px solid #f3c9c5; border-radius: 10px; background: var(--red-bg); margin-bottom: 9px; padding: 11px 12px; }
+    .finding.personal { border-color: #f0db9e; background: var(--amber-bg); }
+    .finding-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .finding-label { font-size: 14px; }
+    .finding-meta { color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .finding-preview { display: block; overflow: hidden; margin-top: 6px; color: #475467; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+    .tag { display: inline-block; margin-right: 6px; border-radius: 4px; background: #f9d7d4; color: var(--red); padding: 1px 5px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+    .personal .tag { background: #f5e5b4; color: var(--amber); }
+
+    .redacted-panel { margin-top: 18px; }
+    footer { margin-top: 18px; color: var(--muted); font-size: 13px; }
+
+    @media (max-width: 780px) {
+      .shell { padding-top: 28px; }
+      .hero { display: block; }
+      .local-badge { margin-top: 14px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">LOCAL TOOL</p>
+        <h1>ShareSafe</h1>
+        <p class="intro">Check text for secrets and personal paths before posting.</p>
+      </div>
+      <div class="local-badge"><span class="dot" aria-hidden="true"></span>Runs in this tab</div>
+    </header>
+
+    <section class="notice" role="status">
+      <strong>Nothing is uploaded.</strong> The scan runs in this page and does not check whether a value is live.
+    </section>
+
+    <section class="grid" aria-label="ShareSafe scanner">
+      <section class="panel panel-inner">
+        <div class="panel-heading">
+          <h2>Text to check</h2>
+          <button class="link-button" id="loadExample" type="button">Load example</button>
+        </div>
+        <textarea id="inputText" spellcheck="false" placeholder="Paste a log, ticket, or draft issue here..."></textarea>
+        <div class="controls">
+          <label class="file-control">Choose a text file
+            <input id="fileInput" type="file" accept=".txt,.log,.md,.json,.csv,.env,text/plain,application/json">
+          </label>
+          <button class="primary" id="scanButton" type="button">Scan text</button>
+          <button id="clearButton" type="button">Clear</button>
+        </div>
+        <p class="helper" id="fileStatus" aria-live="polite"></p>
+      </section>
+
+      <section class="panel panel-inner">
+        <div class="panel-heading">
+          <h2>Results</h2>
+          <span class="summary-pill" id="summaryPill">Not scanned</span>
+        </div>
+        <div class="stats">
+          <div><span class="stat-value" id="findingCount">0</span><span>possible matches</span></div>
+          <div><span class="stat-value" id="lineCount">0</span><span>lines affected</span></div>
+        </div>
+        <div class="results" id="results" aria-live="polite">
+          <p class="empty">Paste text and select Scan text.</p>
+        </div>
+        <div class="actions">
+          <button id="copyButton" type="button" disabled>Copy redacted copy</button>
+          <button id="downloadButton" type="button" disabled>Download redacted</button>
+        </div>
+        <p class="status" id="status" aria-live="polite"></p>
+      </section>
+    </section>
+
+    <section class="panel panel-inner redacted-panel">
+      <div class="panel-heading">
+        <h2>Redacted copy</h2>
+        <button class="link-button" id="selectRedacted" type="button" disabled>Select all</button>
+      </div>
+      <textarea id="redactedText" readonly spellcheck="false" placeholder="The cleaned copy will appear here after a scan."></textarea>
+    </section>
+
+    <footer>Pattern matches are clues, not proof. Review the result before sharing anything.</footer>
+  </main>
+
+  <script>
+    "use strict";
+
+    const inputText = document.getElementById("inputText");
+    const fileInput = document.getElementById("fileInput");
+    const redactedText = document.getElementById("redactedText");
+    const results = document.getElementById("results");
+    const findingCount = document.getElementById("findingCount");
+    const lineCount = document.getElementById("lineCount");
+    const summaryPill = document.getElementById("summaryPill");
+    const copyButton = document.getElementById("copyButton");
+    const downloadButton = document.getElementById("downloadButton");
+    const selectRedacted = document.getElementById("selectRedacted");
+    const status = document.getElementById("status");
+    const fileStatus = document.getElementById("fileStatus");
+
+    const exampleText = [
+      "Build log from local test",
+      "api_key = example-value-only",
+      "contact: person@example.com",
+      "path: C:\\Users\\your-name\\project",
+      "This line is safe."
+    ].join("\\n");
+
+    const rules = [
+      { label: "Private key block", category: "secret", regex: /-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----[\\s\\S]*?-----END [A-Z0-9 ]*PRIVATE KEY-----/g, replacement: "[PRIVATE KEY REDACTED]" },
+      { label: "GitHub token", category: "secret", regex: /\\b(?:gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,})\\b/g, replacement: "[GITHUB TOKEN REDACTED]" },
+      { label: "AWS access key", category: "secret", regex: /\\b(?:AKIA|ASIA)[0-9A-Z]{16}\\b/g, replacement: "[AWS KEY REDACTED]" },
+      { label: "Slack token", category: "secret", regex: /\\bxox[baprs]-[A-Za-z0-9-]{12,}\\b/g, replacement: "[SLACK TOKEN REDACTED]" },
+      { label: "Stripe live key", category: "secret", regex: /\\b(?:sk|rk)_live_[A-Za-z0-9]{16,}\\b/g, replacement: "[STRIPE KEY REDACTED]" },
+      { label: "JWT-like value", category: "secret", regex: /\\beyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\b/g, replacement: "[JWT REDACTED]" },
+      { label: "Credential-like assignment", category: "secret", regex: /\\b(?:api[_-]?key|access[_-]?token|client[_-]?secret|password|passwd|secret|token)\\s*[:=]\\s*["']?[A-Za-z0-9_./+=-]{8,}["']?/gi, replacement: "[CREDENTIAL VALUE REDACTED]" },
+      { label: "Email address", category: "personal", regex: /\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\b/gi, replacement: "[EMAIL REDACTED]" },
+      { label: "Windows user path", category: "personal", regex: /[A-Za-z]:\\\\Users\\\\[^\\r\\n"'<>]+/g, replacement: "[LOCAL PATH REDACTED]" },
+      { label: "Unix user path", category: "personal", regex: /\\/(?:Users|home)\\/[^\\r\\n"'<>]+/g, replacement: "[LOCAL PATH REDACTED]" }
+    ];
+
+    let currentText = "";
+    let currentFindings = [];
+
+    function lineDetails(text, start) {
+      const lineStart = text.lastIndexOf("\\n", start - 1) + 1;
+      const nextBreak = text.indexOf("\\n", start);
+      const lineEnd = nextBreak === -1 ? text.length : nextBreak;
+      return {
+        number: text.slice(0, start).split(/\\r?\\n/).length,
+        start: lineStart,
+        end: lineEnd,
+        text: text.slice(lineStart, lineEnd)
+      };
+    }
+
+    function collectFindings(text) {
+      const findings = [];
+      for (const rule of rules) {
+        rule.regex.lastIndex = 0;
+        let match;
+        while ((match = rule.regex.exec(text)) !== null) {
+          const value = match[0];
+          const start = match.index;
+          const end = start + value.length;
+          const overlaps = findings.some((item) => start < item.end && end > item.start);
+          if (!overlaps) {
+            findings.push({ label: rule.label, category: rule.category, replacement: rule.replacement, start, end });
+          }
+          if (value.length === 0) rule.regex.lastIndex += 1;
+        }
+      }
+
+      findings.sort((left, right) => left.start - right.start || right.end - right.start - (left.end - left.start));
+      for (const finding of findings) {
+        const details = lineDetails(text, finding.start);
+        finding.line = details.number;
+        let preview = details.text;
+        const related = findings
+          .filter((item) => item.start < details.end && item.end > details.start)
+          .sort((left, right) => right.start - left.start);
+        for (const item of related) {
+          const localStart = Math.max(0, item.start - details.start);
+          const localEnd = Math.min(preview.length, item.end - details.start);
+          if (localEnd > localStart) {
+            preview = preview.slice(0, localStart) + item.replacement + preview.slice(localEnd);
+          }
+        }
+        finding.preview = preview.trim().slice(0, 160) || "[match spans more than one line]";
+      }
+      return findings;
+    }
+
+    function buildRedacted(text, findings) {
+      let output = text;
+      const reverse = findings.slice().sort((left, right) => right.start - left.start);
+      for (const finding of reverse) {
+        output = output.slice(0, finding.start) + finding.replacement + output.slice(finding.end);
+      }
+      return output;
+    }
+
+    function renderResults() {
+      results.replaceChildren();
+      findingCount.textContent = String(currentFindings.length);
+      lineCount.textContent = String(new Set(currentFindings.map((item) => item.line)).size);
+
+      if (!currentText.trim()) {
+        summaryPill.textContent = "Not scanned";
+        summaryPill.classList.remove("clear");
+        const message = document.createElement("p");
+        message.className = "empty";
+        message.textContent = "Paste text and select Scan text.";
+        results.append(message);
+        return;
+      }
+
+      if (currentFindings.length === 0) {
+        summaryPill.textContent = "No matches";
+        summaryPill.classList.add("clear");
+        const message = document.createElement("p");
+        message.className = "empty";
+        message.textContent = "No known patterns were found. Review the text yourself before sharing.";
+        results.append(message);
+        return;
+      }
+
+      summaryPill.textContent = currentFindings.length + (currentFindings.length === 1 ? " possible match" : " possible matches");
+      summaryPill.classList.remove("clear");
+
+      for (const finding of currentFindings) {
+        const card = document.createElement("article");
+        card.className = "finding " + finding.category;
+
+        const top = document.createElement("div");
+        top.className = "finding-top";
+        const label = document.createElement("strong");
+        label.className = "finding-label";
+        label.textContent = finding.label;
+        const meta = document.createElement("span");
+        meta.className = "finding-meta";
+        meta.textContent = "Line " + finding.line;
+        top.append(label, meta);
+
+        const detail = document.createElement("div");
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        tag.textContent = finding.category === "secret" ? "review" : "personal";
+        const preview = document.createElement("code");
+        preview.className = "finding-preview";
+        preview.textContent = finding.preview;
+        detail.append(tag, preview);
+
+        card.append(top, detail);
+        results.append(card);
+      }
+    }
+
+    function runScan(text) {
+      currentText = text;
+      currentFindings = collectFindings(text);
+      redactedText.value = text ? buildRedacted(text, currentFindings) : "";
+      const hasText = Boolean(text.trim());
+      copyButton.disabled = !hasText;
+      downloadButton.disabled = !hasText;
+      selectRedacted.disabled = !hasText;
+      status.textContent = hasText ? "Scan complete. Review each possible match." : "";
+      renderResults();
+    }
+
+    async function copyRedacted() {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(redactedText.value);
+        } else {
+          redactedText.focus();
+          redactedText.select();
+          document.execCommand("copy");
+        }
+        status.textContent = "Redacted copy copied to the clipboard.";
+      } catch (error) {
+        status.textContent = "Copy was blocked. Use Select all, then copy it manually.";
+      }
+    }
+
+    function downloadRedacted() {
+      const blob = new Blob([redactedText.value], { type: "text/plain" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "redacted-share.txt";
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(link.href), 0);
+      status.textContent = "Redacted copy downloaded.";
+    }
+
+    document.getElementById("scanButton").addEventListener("click", () => runScan(inputText.value));
+    document.getElementById("clearButton").addEventListener("click", () => {
+      inputText.value = "";
+      fileInput.value = "";
+      fileStatus.textContent = "";
+      runScan("");
+    });
+    document.getElementById("loadExample").addEventListener("click", () => {
+      inputText.value = exampleText;
+      fileStatus.textContent = "Example loaded.";
+      runScan(exampleText);
+    });
+    inputText.addEventListener("input", () => {
+      status.textContent = "Text changed. Select Scan text to update results.";
+    });
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        inputText.value = String(reader.result || "");
+        fileStatus.textContent = file.name + " loaded.";
+        runScan(inputText.value);
+      };
+      reader.onerror = () => { fileStatus.textContent = "The file could not be read."; };
+      reader.readAsText(file);
+    });
+    copyButton.addEventListener("click", copyRedacted);
+    downloadButton.addEventListener("click", downloadRedacted);
+    selectRedacted.addEventListener("click", () => {
+      redactedText.focus();
+      redactedText.select();
+      status.textContent = "Redacted copy selected.";
+    });
+  </script>
+</body>
+</html>
