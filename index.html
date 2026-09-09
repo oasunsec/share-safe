@@ -236,30 +236,30 @@
       "contact: person@example.com",
       "path: C:\\Users\\your-name\\project",
       "This line is safe."
-    ].join("\\n");
+    ].join("\n");
 
     const rules = [
-      { label: "Private key block", category: "secret", regex: /-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----[\\s\\S]*?-----END [A-Z0-9 ]*PRIVATE KEY-----/g, replacement: "[PRIVATE KEY REDACTED]" },
-      { label: "GitHub token", category: "secret", regex: /\\b(?:gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,})\\b/g, replacement: "[GITHUB TOKEN REDACTED]" },
-      { label: "AWS access key", category: "secret", regex: /\\b(?:AKIA|ASIA)[0-9A-Z]{16}\\b/g, replacement: "[AWS KEY REDACTED]" },
-      { label: "Slack token", category: "secret", regex: /\\bxox[baprs]-[A-Za-z0-9-]{12,}\\b/g, replacement: "[SLACK TOKEN REDACTED]" },
-      { label: "Stripe live key", category: "secret", regex: /\\b(?:sk|rk)_live_[A-Za-z0-9]{16,}\\b/g, replacement: "[STRIPE KEY REDACTED]" },
-      { label: "JWT-like value", category: "secret", regex: /\\beyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\b/g, replacement: "[JWT REDACTED]" },
-      { label: "Credential-like assignment", category: "secret", regex: /\\b(?:api[_-]?key|access[_-]?token|client[_-]?secret|password|passwd|secret|token)\\s*[:=]\\s*["']?[A-Za-z0-9_./+=-]{8,}["']?/gi, replacement: "[CREDENTIAL VALUE REDACTED]" },
-      { label: "Email address", category: "personal", regex: /\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\b/gi, replacement: "[EMAIL REDACTED]" },
-      { label: "Windows user path", category: "personal", regex: /[A-Za-z]:\\\\Users\\\\[^\\r\\n"'<>]+/g, replacement: "[LOCAL PATH REDACTED]" },
-      { label: "Unix user path", category: "personal", regex: /\\/(?:Users|home)\\/[^\\r\\n"'<>]+/g, replacement: "[LOCAL PATH REDACTED]" }
+      { label: "Private key block", category: "secret", regex: /-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z0-9 ]*PRIVATE KEY-----/g, replacement: "[PRIVATE KEY REDACTED]" },
+      { label: "GitHub token", category: "secret", regex: /\b(?:gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,})\b/g, replacement: "[GITHUB TOKEN REDACTED]" },
+      { label: "AWS access key", category: "secret", regex: /\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/g, replacement: "[AWS KEY REDACTED]" },
+      { label: "Slack token", category: "secret", regex: /\bxox[baprs]-[A-Za-z0-9-]{12,}\b/g, replacement: "[SLACK TOKEN REDACTED]" },
+      { label: "Stripe live key", category: "secret", regex: /\b(?:sk|rk)_live_[A-Za-z0-9]{16,}\b/g, replacement: "[STRIPE KEY REDACTED]" },
+      { label: "JWT-like value", category: "secret", regex: /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g, replacement: "[JWT REDACTED]" },
+      { label: "Credential-like assignment", category: "secret", regex: /\b(?:api[_-]?key|access[_-]?token|client[_-]?secret|password|passwd|secret|token)\s*[:=]\s*["']?[A-Za-z0-9_./+=-]{8,}["']?/gi, replacement: "[CREDENTIAL VALUE REDACTED]" },
+      { label: "Email address", category: "personal", regex: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, replacement: "[EMAIL REDACTED]" },
+      { label: "Windows user path", category: "personal", regex: /[A-Za-z]:\\Users\\[^\r\n"'<>]+/g, replacement: "[LOCAL PATH REDACTED]" },
+      { label: "Unix user path", category: "personal", regex: /\/(?:Users|home)\/[^\r\n"'<>]+/g, replacement: "[LOCAL PATH REDACTED]" }
     ];
 
     let currentText = "";
     let currentFindings = [];
 
     function lineDetails(text, start) {
-      const lineStart = text.lastIndexOf("\\n", start - 1) + 1;
-      const nextBreak = text.indexOf("\\n", start);
+      const lineStart = text.lastIndexOf("\n", start - 1) + 1;
+      const nextBreak = text.indexOf("\n", start);
       const lineEnd = nextBreak === -1 ? text.length : nextBreak;
       return {
-        number: text.slice(0, start).split(/\\r?\\n/).length,
+        number: text.slice(0, start).split(/\r?\n/).length,
         start: lineStart,
         end: lineEnd,
         text: text.slice(lineStart, lineEnd)
