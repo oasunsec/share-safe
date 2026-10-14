@@ -353,6 +353,16 @@
     "gdim"
   );
 
+  const NOT_NAME_WORDS = new Set([
+    "number", "card", "credit", "debit", "account", "policy", "rule", "rules", "type", "group", "test", "tests",
+    "lab", "data", "default", "file", "files", "record", "records", "id", "code", "key", "service", "server",
+    "app", "application", "project", "team", "site", "page", "report", "alert", "alerts", "incident", "case",
+    "task", "job", "build", "deploy", "release", "access", "block", "control", "controls", "check", "checks",
+    "user", "users", "admin", "admins", "role", "roles", "workspace", "storage", "container", "bucket",
+    "network", "security", "detection", "query", "queries", "table", "event", "events", "log", "logs",
+    "item", "items", "document", "documents", "folder", "list", "settings", "config", "template", "sample",
+    "financial", "external", "internal", "public", "private", "strict", "isolated", "validation", "info"
+  ]);
   const NAME_VALUE = /^[\p{L}][\p{L}'’.\-]*(?:[ ]+[\p{L}][\p{L}'’.\-]*){0,5}$/u;
   const TITLE_WORD = /^[\p{Lu}][\p{Ll}'’.\-]+$/u;
   const COMMON_ACCOUNTS = new Set([
@@ -386,6 +396,8 @@
         const lineStart = text.lastIndexOf("\n", keyStart - 1) + 1;
         const before = text.slice(lineStart, keyStart);
         if (/^[ \t]{2,}|^[ \t]*-[ \t]/.test(before)) return false;
+        // "Credit Card Number", "Default Policy": Title Case labels, not people.
+        if (words.some((w) => NOT_NAME_WORDS.has(w.toLowerCase()))) return false;
         return words.length >= 2 && words.length <= 4 && words.every((w) => TITLE_WORD.test(w));
       }
       case "id":

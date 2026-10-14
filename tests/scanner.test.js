@@ -384,7 +384,9 @@ test("ordinary logs, code and config produce no findings", () => {
     "fetch(url, { credentials: \"same-origin\" })",
     "body: JSON.stringify({ password: currentPassword })",
     "./repo_cache/EVTX-ATTACK-SAMPLES/Defense Evasion/DE_WinEventLogSvc_Crash_System_7036.evtx",
-    "./repo_cache/EVTX-ATTACK-SAMPLES/Credential Access/CA_DCSync_4662.evtx"
+    "./repo_cache/EVTX-ATTACK-SAMPLES/Credential Access/CA_DCSync_4662.evtx",
+    "{\"name\": \"Credit Card Number\", \"minCount\": 1}",
+    "{\"name\": \"Default Office Policy\"}"
   ].join("\n");
   const found = scan(text).findings.filter((f) => f.confidence !== "low");
   assert.deepEqual(found.map((f) => `${f.label}: ${f.value}`), []);
