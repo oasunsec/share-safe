@@ -204,7 +204,9 @@ test("skips placeholders and variable references", () => {
     "password = settings.DB_PASSWORD",
     "client_secret: '********'",
     "TOKEN=%TOKEN%",
-    "api_key: your_api_key_here"
+    "api_key: your_api_key_here",
+    "-H \"X-API-Key: $env:CANARY_MANAGEMENT_API_KEY\"",
+    "CANARY_API_KEY=use-a-secret-from-your-secret-store"
   ].join("\n");
   assert.deepEqual(labels(text), []);
 });
@@ -386,6 +388,11 @@ test("ordinary logs, code and config produce no findings", () => {
     "./repo_cache/EVTX-ATTACK-SAMPLES/Defense Evasion/DE_WinEventLogSvc_Crash_System_7036.evtx",
     "./repo_cache/EVTX-ATTACK-SAMPLES/Credential Access/CA_DCSync_4662.evtx",
     "{\"name\": \"Credit Card Number\", \"minCount\": 1}",
+    "- Credential: rotate the exfiltrated API_KEY and review its use",
+    "The callback token is separate from the event ID.",
+    "The token was re-enabled after the test.",
+    "<path d=\"M64.4839968774395 12.5 L194.03125 64.46088027954102\"/>",
+    "data-points=\"" + Buffer.from(JSON.stringify([{ x: 194.03125, y: 64.46088027954102 }, { x: 433.4375, y: 64.46 }])).toString("base64") + "\"",
     "{\"name\": \"Default Office Policy\"}"
   ].join("\n");
   const found = scan(text).findings.filter((f) => f.confidence !== "low");

@@ -264,7 +264,8 @@
     if (/^<[^<>]*>$/.test(v) || /^\[[^\[\]]*\]$/.test(v)) return true;
     if (/^\{\{.*\}\}$/.test(v) || /^\$\{[^}]*\}$/.test(v) || /^\$\(.*\)$/.test(v)) return true;
     if (/^\$[A-Za-z_][A-Za-z0-9_]*$/.test(v) || /^%[A-Za-z_][A-Za-z0-9_]*%$/.test(v)) return true;
-    if (/^(?:your|my|insert|enter|replace|put|add)[-_ ]/i.test(v)) return true;
+    if (/^\$env:[A-Za-z_][A-Za-z0-9_]*$/i.test(v)) return true; // PowerShell variable
+    if (/^(?:your|my|insert|enter|replace|put|add|use|set|change)[-_ ]/i.test(v)) return true;
     return false;
   }
 
@@ -515,6 +516,18 @@
     }
   }
 
+  // Long base64 that decodes to structured text (JSON, markup) is data, such as a
+  // diagram embedded in an SVG. Short decoded strings stay suspicious: they are
+  // often just an encoded password.
+  function isEncodedText(seg) {
+    if (seg.length < 64 || !/^[A-Za-z0-9+\/]+={0,2}$/.test(seg)) return false;
+    const body = seg.replace(/=+$/, "");
+    const decoded = decodeBase64(body.slice(0, body.length - (body.length % 4)));
+    if (!decoded || decoded.length < 48) return false;
+    const printable = decoded.replace(/[^\x20-\x7e\t\r\n]/g, "").length;
+    return printable >= decoded.length * 0.95 && (decoded.match(/[{}\[\]":,<>=]/g) || []).length >= 4;
+  }
+
   function escapeRegex(s) {
     return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
@@ -688,6 +701,8 @@
         if (!quoted && looksLikeCode(v)) return null;
         if (!quoted && m.groups.q && /^[A-Za-z_][\w.]*$/.test(v)) return null; // "csrf_token": csrf_token
         if (!quoted && followedByCode(text, q.end)) return null; // user_key = username or "x"
+        // "Credential: rotate the exfiltrated key" is a sentence, not a value.
+        if (!quoted && m.groups.op === ":" && /^[a-z][a-z\-]*$/.test(v) && /^[ \t]+[a-z]{2,}/.test(text.slice(q.end, q.end + 24))) return null;
         if (v === key) return null;
         if (/^\d+$/.test(v) && v.length < 6 && secret.kind !== "pin") return null;
         // Session IDs are long and random; "triage_session" is a cookie name.
@@ -718,8 +733,8 @@
           if (!(m.groups.c || m.groups.verb) || !hasDigit(v)) return null;
         } else if (m.groups.verb) {
           // "my password is SunnyDays": the sentence says it is the value.
-          // "credentials were exported" is a sentence about it.
-          if (/^[a-z]+(?:ed|ing|ly)$/.test(v)) return null;
+          // "credentials were exported", "the token is separate" are sentences about it.
+          if (/^[a-z][a-z'\-]*$/.test(v)) return null;
         } else if (m.groups.c) {
           if (!secretish) return null;
         } else if (!secretish || v.length < 8) {
@@ -790,7 +805,7 @@
 
     list.push({
       id: "card", label: "Payment card number", tag: "CARD", category: "financial", confidence: "high",
-      regex: /(?<![\d\-])(?:\d[ \-]?){12,18}\d(?![\d\-])/g,
+      regex: /(?<![\d\-.])(?:\d[ \-]?){12,18}\d(?![\d\-]|\.\d)/g, // not inside decimals like 64.4839968774395
       check(value) {
         const digits = value.replace(/\D/g, "");
         if (digits.length < 13 || digits.length > 19) return null;
@@ -950,6 +965,10 @@
             if (/^(?:sha(?:1|224|256|384|512)|md5)-/i.test(seg) || !looksRandom(seg)) continue;
             const start = base + ps + lead;
             if (/(?:sha(?:1|224|256|384|512)|md5)[-:]$/i.test(contextBefore(text, start, 8))) continue; // integrity hashes
+            if (isEncodedText(seg)) {
+              out.push({ start, end: start + seg.length, confidence: "low", label: "Encoded data (base64 text)" });
+              continue;
+            }
             const long = seg.length > 256;
             out.push({
               start, end: start + seg.length,
