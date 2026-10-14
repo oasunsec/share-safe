@@ -2,6 +2,8 @@
 
 A small local browser tool that checks text before you post it.
 
+Try it: [oasunsec.github.io/share-safe](https://oasunsec.github.io/share-safe/)
+
 ## What it checks
 
 - API keys and access tokens
@@ -14,7 +16,7 @@ The tool shows the line where a possible match was found and can create a redact
 
 ## Use it
 
-1. Open index.html in a browser.
+1. Open the [live page](https://oasunsec.github.io/share-safe/), or open `index.html` locally.
 2. Paste text into the box or choose a local text file.
 3. Select Scan text.
 4. Copy or download the redacted version before sharing.
